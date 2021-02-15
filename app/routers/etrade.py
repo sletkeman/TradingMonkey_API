@@ -3,51 +3,51 @@ defines history routes
 """
 from datetime import datetime
 from typing import List
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response, status
 from pydantic import BaseModel
-from services.etrade import (
+from app.services.etrade import (
     get_auth_url,
     get_auth_session
 )
+from app.services.db import (
+    get_user_etrade_params,
+    save_auth_request,
+    save_session
+)
+
+USER_ID = 57 # scott's id
 
 router = APIRouter()
 
 class AuthUrl(BaseModel):
     url: str
-    secret: str
 
-@router.get("/url",
+@router.get("/auth",
             response_model=AuthUrl,
             description="gets the auth url",
             summary="Gets the auth url"
             )
-def get_auth_url():
+def get_auth():
     "gets the auth url"
     try:
-        url, secret = get_auth_url()
-        return {
-            'url': url,
-            'secret': secret
-        }
+        params = get_user_etrade_params(USER_ID)
+        url, token, secret = get_auth_url()
+        save_auth_request(token, secret, USER_ID)
+        return { 'url': url }
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
 
-class Session(BaseModel):
-    token: str
-    secret: int
-
-@router.get("/session",
-            response_model=Session,
-            description="gets the access token",
-            summary="Gets the access token"
+@router.post("/session",
+            description="creates the session",
+            summary="creates the session",
+            responses={204: {"model": None}},
             )
-def get_auth_session(token: str, secret: str, code: str):
+def post_auth_session(code: str):
     "gets the access token"
     try:
-        session = get_auth_session(token, secret, code)
-        return {
-            'token': session['oauth_token'],
-            'secret': session['oauth_token_secret'],
-        }
+        params = get_user_etrade_params(USER_ID)
+        session = get_auth_session(params['RequestToken'], params['RequestSecret'], code)
+        save_session(session.access_token, session.access_token_secret, USER_ID)
+        return Response(status_code=status.HTTP_204_NO_CONTENT) 
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))

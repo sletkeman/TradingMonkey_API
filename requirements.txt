@@ -3,3 +3,4 @@ uvicorn~=0.13.3
 rauth==0.7.3
 python-dotenv~=0.15.0
 iexfinance~=0.5.0
+pyodbc~=4.0.30

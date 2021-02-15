@@ -15,7 +15,7 @@ def get_auth_url():
     
     authorize_url = etrade.authorize_url.format(etrade.consumer_key, request_token)
     
-    return authorize_url, request_token_secret
+    return authorize_url, request_token, request_token_secret
 
 def get_auth_session(request_token, request_token_secret, text_code):
     etrade = OAuth1Service(

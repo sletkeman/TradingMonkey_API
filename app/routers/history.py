@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from services.iex import get_historical
+from app.services.iex import get_historical
 
 router = APIRouter()
 
