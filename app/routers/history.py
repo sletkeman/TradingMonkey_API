@@ -20,7 +20,7 @@ class Quote(BaseModel):
     id: str
     key: str
     subkey: str
-    date: str
+    index: str
     updated: int
     changeOverTime: float
     marketChangeOverTime: float
@@ -48,8 +48,9 @@ def get_history(symbol: str, start = Query(None), end = Query(None)):
     "gets the history"
     try:
         s = datetime.strptime(start, '%Y-%m-%d')
-        e = datetime.strptime(start, '%Y-%m-%d')
-        return get_historical(symbol, s, e)
+        e = datetime.strptime(end, '%Y-%m-%d')
+        result = get_historical(symbol.upper(), s, e)
+        return result
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
 
