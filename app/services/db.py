@@ -7,7 +7,7 @@ from app.util.mssql import MSSQL
 def get_user_etrade_params(userId):
     with MSSQL() as db:
         sql = """
-            SELECT RequestToken, RequestSecret, AccessToken, AccessSecret, CreateDateTime
+            SELECT *
             FROM dbo.Users_Etrade_Session
             WHERE UserID = ?
         """
