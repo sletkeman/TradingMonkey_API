@@ -1,14 +1,15 @@
 import requests
 from requests_oauthlib import OAuth1, OAuth1Session
 from urllib.parse import parse_qsl
+import json
 
-BASE_URL="https://apisb.etrade.com/oauth" # Sandbox
+BASE_URL="https://apisb.etrade.com" # Sandbox
 PROD_BASE_URL="https://api.etrade.com/oauth"
 AUTHORIZE_URL="https://us.etrade.com/e/t/etws/authorize"
 
 def get_auth_url(consumer_key, consumer_secret):   
     auth_session = OAuth1Session(consumer_key, client_secret=consumer_secret, callback_uri='oob')
-    response = auth_session.fetch_request_token(f"{BASE_URL}/request_token")
+    response = auth_session.fetch_request_token(f"{BASE_URL}/oauth/request_token")
     auth_url = f"{AUTHORIZE_URL}?key={consumer_key}&token={response.get('oauth_token')}"
     return auth_url, response.get('oauth_token'), response.get('oauth_token_secret')
 
@@ -23,5 +24,17 @@ def get_auth_session(request_token, request_token_secret, text_code, consumer_ke
 
 def renew_session(consumer_key, consumer_secret, request_token, request_token_secret):
     auth = OAuth1(consumer_key, consumer_secret, request_token, request_token_secret, signature_method='HMAC-SHA1')
-    response = requests.get(f'{BASE_URL}/renew_access_token', auth=auth)
+    response = requests.get(f'{BASE_URL}/oauth/renew_access_token', auth=auth)
     return response.status_code == 200
+
+def fetch_accounts(consumer_key, consumer_secret, request_token, request_token_secret):
+    auth = OAuth1(consumer_key, consumer_secret, request_token, request_token_secret, signature_method='HMAC-SHA1')
+    response = requests.get(f'{BASE_URL}/v1/accounts/list.json', auth=auth)
+    parsed = json.loads(response.text)
+    return parsed.get('AccountListResponse').get('Accounts').get('Account')
+
+def fetch_portfolio(account_id, consumer_key, consumer_secret, request_token, request_token_secret):
+    auth = OAuth1(consumer_key, consumer_secret, request_token, request_token_secret, signature_method='HMAC-SHA1')
+    response = requests.get(f'{BASE_URL}/v1/accounts/{account_id}/portfolio.json', auth=auth)
+    parsed = json.loads(response.text)
+    return parsed.get('PortfolioResponse').get('AccountPortfolio')

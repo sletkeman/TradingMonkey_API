@@ -2,7 +2,7 @@
 
 1. Create a virtual environment. (Only do this the first time)
 <br>
-`python -m venv venv`
+`python3 -m venv venv`
 
 2. Activate the virtual environement
 <br>

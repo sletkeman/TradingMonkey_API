@@ -4,11 +4,13 @@ defines history routes
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, HTTPException, Query, Response, status
-from pydantic import BaseModel
+from pydantic import BaseModel, typing
 from app.services.etrade import (
     get_auth_url,
     get_auth_session,
-    renew_session
+    renew_session,
+    fetch_accounts,
+    fetch_portfolio
 )
 from app.services.db import (
     get_user_etrade_params,
@@ -59,5 +61,44 @@ def post_auth_session(code: str):
         access_token, access_token_secret = get_auth_session(params['RequestToken'], params['RequestSecret'], code, params['ConsumerKey'], params['ConsumerSecret'])
         save_session(access_token, access_token_secret, USER_ID)
         return Response(status_code=status.HTTP_204_NO_CONTENT) 
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+class Account(BaseModel):
+    accountId: str
+    accountIdKey: str
+    accountMode: str
+    accountDesc: str
+    accountName: str
+    accountType: str
+    institutionType: str
+    accountStatus: str
+    closedDate: datetime = None
+
+@router.get("/accounts",
+            response_model=List[Account],
+            description="gets the user's accounts",
+            summary="Gets the user's accounts"
+            )
+def get_accounts():
+    "gets a user's etrade accounts"
+    try:
+        params = get_user_etrade_params(USER_ID)
+        return fetch_accounts(params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+@router.get("/portfolio",
+            response_model=typing.Any,
+            description="gets the user's account portfolio",
+            summary="Gets the user's account portfolio"
+            )
+def get_portfolio(account_id: str):
+    "gets a user's etrade account portfolio"
+    try:
+        params = get_user_etrade_params(USER_ID)
+        result = fetch_portfolio(account_id, params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
+        return result
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
