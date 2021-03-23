@@ -15,10 +15,10 @@ from app.services.etrade import (
 from app.services.db import (
     get_user_etrade_params,
     save_auth_request,
-    save_session
+    save_session,
 )
 
-USER_ID = 57 # scott's id
+USER_ID = 62 # scott's id
 
 router = APIRouter()
 

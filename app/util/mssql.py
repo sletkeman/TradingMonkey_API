@@ -38,7 +38,9 @@ class MSSQL(object):
 
     def query(self, query, params=()):
         '''Executes a query and returns the results'''
-        return self.execute(query, params).fetchall()
+        cursor = self.execute(query, params)
+        columns = [column[0] for column in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     def query_one(self, query, params=()):
         '''Executes a query and returns a result'''

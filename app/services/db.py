@@ -41,3 +41,22 @@ def save_session(token, secret, userId):
             WHERE UserID = ?
         """
         return db.execute(sql, (token, secret, userId))
+
+def get_user_monkeys(userId):
+    with MSSQL() as db:
+        sql = """
+            SELECT m.MonkeyName, m.MonkeyID
+            FROM Monkeys m
+                JOIN Accounts_Users au ON m.AccountID = au.AccountID
+            WHERE au.UserID = ?
+        """
+        return db.query(sql, (userId,))
+
+def get_monkey_positions(monkeyId, date):
+    with MSSQL() as db:
+        sql = """
+            SELECT Symbol, Shares, OpenDate, OpenPrice, CloseDate, ClosePrice, isShort
+            FROM Positions
+            WHERE MonkeyId = ? AND CurrentDate = CAST(? AS DATE) 
+        """
+        return db.query(sql, (monkeyId, date))
