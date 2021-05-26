@@ -45,8 +45,12 @@ class MSSQL(object):
     def query_one(self, query, params=()):
         '''Executes a query and returns a result'''
         cursor = self.execute(query, params)
-        columns = [column[0] for column in cursor.description]
-        return dict(zip(columns, cursor.fetchone()))
+        results = list(cursor)
+        if len(results) > 0:
+            columns = [column[0] for column in cursor.description]
+            return dict(zip(columns, results[0]))
+        else:
+            return dict()
 
     def get_connection(self):
         '''returns the connection object'''

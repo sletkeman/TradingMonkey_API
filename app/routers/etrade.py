@@ -23,8 +23,8 @@ USER_ID = 62 # scott's id
 router = APIRouter()
 
 class AuthResponse(BaseModel):
-    url: str
-    auth: bool
+    authUrl: str
+    authenticated: bool
 
 @router.get("/auth",
             response_model=AuthResponse,
@@ -38,14 +38,17 @@ def get_auth():
         today = datetime.now()
         dt = params.get('CreateDateTime')
         authorized = False
-        if dt.day == today.day and dt.month == today.month and dt.year == today.year:
+        if not params.get('ConsumerKey') or not params.get('ConsumerSecret'):
+            raise HTTPException(status_code=500, detail="Users need an ETrade consumer key and secret before they can use this service.")
+
+        if dt and dt.day == today.day and dt.month == today.month and dt.year == today.year:
             authorized = renew_session(params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
             if authorized:
-                return { 'url': '', 'auth': True }
+                return { 'authUrl': '', 'authenticated': True }
         if not authorized:
             url, token, secret = get_auth_url(params['ConsumerKey'], params['ConsumerSecret'])
             save_auth_request(token, secret, USER_ID)
-            return { 'url': url, 'auth': False }
+            return { 'authUrl': url, 'authenticated': False }
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
 

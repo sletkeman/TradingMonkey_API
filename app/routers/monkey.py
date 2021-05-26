@@ -6,23 +6,35 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, typing
 from app.services.db import (
+    get_users,
     get_monkey_positions,
     get_user_monkeys
 )
 
-USER_ID = 62 # scott's id
-
 router = APIRouter()
+
+@router.get("/users",
+            response_model=typing.Any,
+            description="gets the users",
+            summary="Gets the users"
+            )
+def get_usrs():
+    "gets a user's monkeys"
+    try:
+        result = get_users()
+        return result
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
 
 @router.get("/monkeys",
             response_model=typing.Any,
             description="gets the user's monkeys",
             summary="Gets the user's monkeys"
             )
-def get_monkeys():
+def get_monkeys(userId):
     "gets a user's monkeys"
     try:
-        result = get_user_monkeys(USER_ID)
+        result = get_user_monkeys(userId)
         return result
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))

@@ -11,15 +11,8 @@ def get_user_etrade_params(userId):
             FROM dbo.Users_Etrade_Session
             WHERE UserID = ?
         """
-        result = db.query_one(sql, (userId,))
-        if result:
-            return result
-        else:
-            sql = """
-                INSERT INTO dbo.Users_Etrade_Session (UserId)
-                Values (?)
-            """
-            db.execute(sql, (userId,))
+        return db.query_one(sql, (userId,))
+
 
 def save_auth_request(token, secret, userId):
     with MSSQL() as db:
@@ -42,13 +35,24 @@ def save_session(token, secret, userId):
         """
         return db.execute(sql, (token, secret, userId))
 
+def get_users():
+    with MSSQL() as db:
+        sql = """
+            SELECT DISTINCT u.UserLogin, u.UserID
+            FROM Monkeys m
+                JOIN Accounts_Users au ON m.AccountID = au.AccountID
+                JOIN Users u ON au.UserID = u.UserID
+        """
+        return db.query(sql)
+
 def get_user_monkeys(userId):
     with MSSQL() as db:
         sql = """
             SELECT m.MonkeyName, m.MonkeyID
             FROM Monkeys m
                 JOIN Accounts_Users au ON m.AccountID = au.AccountID
-            WHERE au.UserID = ?
+                JOIN Users u ON au.UserID = u.UserID
+            WHERE u.UserID = ?
         """
         return db.query(sql, (userId,))
 
