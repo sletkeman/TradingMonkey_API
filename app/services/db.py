@@ -56,11 +56,11 @@ def get_user_monkeys(userId):
         """
         return db.query(sql, (userId,))
 
-def get_monkey_positions(monkeyId, date):
+def get_monkey_positions(monkeyId):
     with MSSQL() as db:
         sql = """
-            SELECT Symbol, Shares, OpenDate, OpenPrice, CloseDate, ClosePrice, isShort
+            SELECT Symbol, Shares, OpenDate, OpenPrice, isShort, CurrentDate, CurrentPrice
             FROM Positions
-            WHERE MonkeyId = ? AND CurrentDate = CAST(? AS DATE) 
+            WHERE MonkeyId = ? AND CloseDate is null;
         """
-        return db.query(sql, (monkeyId, date))
+        return db.query(sql, (monkeyId,))
