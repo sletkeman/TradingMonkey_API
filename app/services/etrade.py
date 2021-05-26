@@ -31,10 +31,18 @@ def fetch_accounts(consumer_key, consumer_secret, request_token, request_token_s
     auth = OAuth1(consumer_key, consumer_secret, request_token, request_token_secret, signature_method='HMAC-SHA1')
     response = requests.get(f'{BASE_URL}/v1/accounts/list.json', auth=auth)
     parsed = json.loads(response.text)
-    return parsed.get('AccountListResponse').get('Accounts').get('Account')
+    keys = parsed.keys()
+    if 'AccountListResponse' in keys:
+        return parsed.get('AccountListResponse').get('Accounts').get('Account')
+    else:
+        raise Exception(parsed.get('Error'))
 
-def fetch_portfolio(account_id, consumer_key, consumer_secret, request_token, request_token_secret):
+def fetch_portfolio(account_key, consumer_key, consumer_secret, request_token, request_token_secret):
     auth = OAuth1(consumer_key, consumer_secret, request_token, request_token_secret, signature_method='HMAC-SHA1')
-    response = requests.get(f'{BASE_URL}/v1/accounts/{account_id}/portfolio.json', auth=auth)
+    response = requests.get(f'{BASE_URL}/v1/accounts/{account_key}/portfolio.json', auth=auth)
     parsed = json.loads(response.text)
-    return parsed.get('PortfolioResponse').get('AccountPortfolio')
+    keys = parsed.keys()
+    if 'PortfolioResponse' in keys:
+        return parsed.get('PortfolioResponse').get('AccountPortfolio')[0]
+    else:
+        raise Exception(parsed.get('Error'))

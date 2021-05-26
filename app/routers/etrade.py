@@ -52,6 +52,30 @@ def get_auth():
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
 
+@router.get("/session",
+            description="confirms a session exists",
+            summary="confirms a session exists",
+            response_model=AuthResponse,
+            )
+def get_session():
+    "confirms a session exists"
+    try:
+        params = get_user_etrade_params(USER_ID)
+        today = datetime.now()
+        dt = params.get('CreateDateTime')
+        authorized = False
+        if not params.get('ConsumerKey') or not params.get('ConsumerSecret'):
+            raise HTTPException(status_code=500, detail="Users need an ETrade consumer key and secret before they can use this service.")
+
+        if dt and dt.day == today.day and dt.month == today.month and dt.year == today.year:
+            authorized = renew_session(params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
+            if authorized:
+                return { 'authUrl': '', 'authenticated': True }
+        if not authorized:
+            return { 'authUrl': '', 'authenticated': False }
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
 @router.post("/session",
             description="creates the session",
             summary="creates the session",
@@ -87,7 +111,9 @@ def get_accounts():
     "gets a user's etrade accounts"
     try:
         params = get_user_etrade_params(USER_ID)
-        return fetch_accounts(params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
+        accounts = fetch_accounts(params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
+        filtered = [a for a in accounts if a['accountStatus'] == 'ACTIVE']
+        return filtered
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
 
@@ -97,11 +123,11 @@ def get_accounts():
             description="gets the user's account portfolio",
             summary="Gets the user's account portfolio"
             )
-def get_portfolio(account_id: str):
+def get_portfolio(account_key: str):
     "gets a user's etrade account portfolio"
     try:
         params = get_user_etrade_params(USER_ID)
-        result = fetch_portfolio(account_id, params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
+        result = fetch_portfolio(account_key, params['ConsumerKey'], params['ConsumerSecret'], params['AccessToken'], params['AccessSecret'])
         return result
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
